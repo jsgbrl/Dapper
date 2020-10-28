@@ -30,7 +30,7 @@ namespace Dapper.Contrib.Extensions
                 var key = GetSingleKey<T>(nameof(GetAsync));
                 var name = GetTableName(type);
 
-                sql = $"SELECT * FROM {name} WHERE {key.Name} = @id";
+                sql = $"SELECT * FROM {name} WHERE {GetColumnName(key)} = @id";
                 GetQueries[type.TypeHandle] = sql;
             }
 
@@ -172,7 +172,7 @@ namespace Dapper.Contrib.Extensions
             for (var i = 0; i < allPropertiesExceptKeyAndComputed.Count; i++)
             {
                 var property = allPropertiesExceptKeyAndComputed[i];
-                sqlAdapter.AppendColumnName(sbColumnList, property.Name);
+                sqlAdapter.AppendColumnName(sbColumnList, GetColumnName(property));
                 if (i < allPropertiesExceptKeyAndComputed.Count - 1)
                     sbColumnList.Append(", ");
             }
@@ -181,7 +181,7 @@ namespace Dapper.Contrib.Extensions
             for (var i = 0; i < allPropertiesExceptKeyAndComputed.Count; i++)
             {
                 var property = allPropertiesExceptKeyAndComputed[i];
-                sbParameterList.AppendFormat("@{0}", property.Name);
+                sbParameterList.AppendFormat("@{0}", GetColumnName(property));
                 if (i < allPropertiesExceptKeyAndComputed.Count - 1)
                     sbParameterList.Append(", ");
             }
@@ -252,7 +252,7 @@ namespace Dapper.Contrib.Extensions
             for (var i = 0; i < nonIdProps.Count; i++)
             {
                 var property = nonIdProps[i];
-                adapter.AppendColumnNameEqualsValue(sb, property.Name);
+                adapter.AppendColumnNameEqualsValue(sb, GetColumnName(property));
                 if (i < nonIdProps.Count - 1)
                     sb.Append(", ");
             }
@@ -260,7 +260,7 @@ namespace Dapper.Contrib.Extensions
             for (var i = 0; i < keyProperties.Count; i++)
             {
                 var property = keyProperties[i];
-                adapter.AppendColumnNameEqualsValue(sb, property.Name);
+                adapter.AppendColumnNameEqualsValue(sb, GetColumnName(property));
                 if (i < keyProperties.Count - 1)
                     sb.Append(" and ");
             }
@@ -317,7 +317,7 @@ namespace Dapper.Contrib.Extensions
             for (var i = 0; i < allKeyProperties.Count; i++)
             {
                 var property = allKeyProperties[i];
-                adapter.AppendColumnNameEqualsValue(sb, property.Name);
+                adapter.AppendColumnNameEqualsValue(sb, GetColumnName(property));
                 if (i < allKeyProperties.Count - 1)
                     sb.Append(" AND ");
             }

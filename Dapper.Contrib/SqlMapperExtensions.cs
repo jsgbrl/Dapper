@@ -176,7 +176,7 @@ namespace Dapper.Contrib.Extensions
                 var key = GetSingleKey<T>(nameof(Get));
                 var name = GetTableName(type);
 
-                sql = $"select * from {name} where {key.Name} = @id";
+                sql = $"select * from {name} where {GetColumnName(key)} = @id";
                 GetQueries[type.TypeHandle] = sql;
             }
 
@@ -306,6 +306,12 @@ namespace Dapper.Contrib.Extensions
             return name;
         }
 
+        private static string GetColumnName(PropertyInfo propInfo)
+        {
+            var colAttr = propInfo.GetCustomAttribute<ColumnAttribute>(true);
+            return colAttr == null ? propInfo.Name : colAttr.Name;
+        }
+
         /// <summary>
         /// Inserts an entity into table "Ts" and returns identity id or number of inserted rows if inserting a list.
         /// </summary>
@@ -352,7 +358,7 @@ namespace Dapper.Contrib.Extensions
             for (var i = 0; i < allPropertiesExceptKeyAndComputed.Count; i++)
             {
                 var property = allPropertiesExceptKeyAndComputed[i];
-                adapter.AppendColumnName(sbColumnList, property.Name);  //fix for issue #336
+                adapter.AppendColumnName(sbColumnList, GetColumnName(property));
                 if (i < allPropertiesExceptKeyAndComputed.Count - 1)
                     sbColumnList.Append(", ");
             }
@@ -440,7 +446,7 @@ namespace Dapper.Contrib.Extensions
             for (var i = 0; i < nonIdProps.Count; i++)
             {
                 var property = nonIdProps[i];
-                adapter.AppendColumnNameEqualsValue(sb, property.Name);  //fix for issue #336
+                adapter.AppendColumnNameEqualsValue(sb, GetColumnName(property));
                 if (i < nonIdProps.Count - 1)
                     sb.Append(", ");
             }
@@ -448,7 +454,7 @@ namespace Dapper.Contrib.Extensions
             for (var i = 0; i < keyProperties.Count; i++)
             {
                 var property = keyProperties[i];
-                adapter.AppendColumnNameEqualsValue(sb, property.Name);  //fix for issue #336
+                adapter.AppendColumnNameEqualsValue(sb, GetColumnName(property));
                 if (i < keyProperties.Count - 1)
                     sb.Append(" and ");
             }
@@ -505,7 +511,7 @@ namespace Dapper.Contrib.Extensions
             for (var i = 0; i < keyProperties.Count; i++)
             {
                 var property = keyProperties[i];
-                adapter.AppendColumnNameEqualsValue(sb, property.Name);  //fix for issue #336
+                adapter.AppendColumnNameEqualsValue(sb, GetColumnName(property));
                 if (i < keyProperties.Count - 1)
                     sb.Append(" and ");
             }
@@ -715,6 +721,27 @@ namespace Dapper.Contrib.Extensions
         /// The name of the table in the database
         /// </summary>
         public string Name { get; set; }
+    }
+
+    /// <summary>
+    /// Defines the name of the column to use in Dapper.Contrib commands.
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Property)]
+    public class ColumnAttribute : Attribute
+    {
+        /// <summary>
+        /// Creates a column mapping to a specific name for Dapper.Contrib commands
+        /// </summary>
+        /// <param name="name">The name of this column in the database.</param>
+        public ColumnAttribute(string name)
+        {
+            Name = name;
+        }
+
+        /// <summary>
+        /// The name of the column in the database
+        /// </summary>
+        public string Name { get; }
     }
 
     /// <summary>
